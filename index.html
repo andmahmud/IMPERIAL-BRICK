@@ -417,6 +417,37 @@
     </div>
   </footer>
 
+  <!-- RESERVATION CONFIRMED FULLSCREEN OVERLAY -->
+  <div class="conf-overlay" id="confOverlay" aria-hidden="true">
+
+    <!-- LEFT PANEL -->
+    <div class="conf-left">
+      <div class="conf-quote-block">
+        <p class="conf-quote-line">You didn't purchase a brick.</p>
+        <span class="conf-diamond">✦</span>
+        <p class="conf-quote-line conf-quote-italic">You became part of its story.</p>
+      </div>
+      <div class="conf-brick-scene">
+        <canvas id="confBrickCanvas" width="340" height="220"></canvas>
+        <div class="conf-brick-glow"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="conf-right">
+      <div class="conf-star-badge">
+        <svg viewBox="0 0 24 24" fill="none" width="28" height="28">
+          <path d="M12 2L14.5 8.5L21 9.3L16 14L17.5 21L12 17.3L6.5 21L8 14L3 9.3L9.5 8.5L12 2Z" fill="#d4af37"/>
+        </svg>
+      </div>
+      <h2 class="conf-title">Reservation Confirmed</h2>
+      <p class="conf-subtitle" id="confOverlayText">Brick No. 6 of 12 has been reserved in your name.</p>
+      <div class="conf-receipt-card" id="confOverlayReceipt"></div>
+      <button class="conf-done-btn" id="confOverlayDoneBtn">DONE &nbsp;→</button>
+    </div>
+
+  </div>
+
   <!-- CHECKOUT MODAL -->
   <div class="checkout-modal" id="checkoutModal" aria-hidden="true">
     <div class="checkout-topbar">
@@ -505,25 +536,13 @@
             <div class="checkout-line"><span>Certificate &amp; Display Case</span><span>Included</span></div>
             <div class="checkout-line"><span>Shipping</span><span>Complimentary</span></div>
             <div class="checkout-line checkout-line-total"><span>Total Due Today</span><span>$0.00</span></div>
-            <div class="checkout-summary-note">No payment is processed on this demo. Total reflects a satirical $0.00
-              charge.</div>
+            <div class="checkout-summary-note">No payment is processed on this demo. Total reflects a satirical $0.00 charge.</div>
           </div>
         </div>
       </div>
-
-      <div class="checkout-step checkout-step-confirm" id="checkoutStepConfirm" hidden>
-        <div class="vip-badge">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L14.5 8.5L21 9.3L16 14L17.5 21L12 17.3L6.5 21L8 14L3 9.3L9.5 8.5L12 2Z" fill="#d4af37" />
-          </svg>
-        </div>
-        <h3 class="gold-text">Reservation Confirmed</h3>
-        <p class="checkout-sub" id="checkoutConfirmText">Your Imperial Brick has been set aside.</p>
-        <div class="checkout-receipt" id="checkoutReceipt"></div>
-        <button class="btn-luxury checkout-submit" id="checkoutDoneBtn">Done <span class="arrow">→</span></button>
-      </div>
     </div>
   </div>
+
 
   <script>
     /* ================= NAV SCROLL STATE ================= */
@@ -668,13 +687,15 @@
     (function () {
       const modal = document.getElementById('checkoutModal');
       const closeBtn = document.getElementById('checkoutClose');
-      const doneBtn = document.getElementById('checkoutDoneBtn');
       const form = document.getElementById('checkoutForm');
       const stepForm = document.getElementById('checkoutStepForm');
-      const stepConfirm = document.getElementById('checkoutStepConfirm');
       const submitBtn = document.getElementById('checkoutSubmitBtn');
-      const receipt = document.getElementById('checkoutReceipt');
-      const confirmText = document.getElementById('checkoutConfirmText');
+
+      // New full-screen overlay references
+      const confOverlay = document.getElementById('confOverlay');
+      const confOverlayText = document.getElementById('confOverlayText');
+      const confOverlayReceipt = document.getElementById('confOverlayReceipt');
+      const confOverlayDoneBtn = document.getElementById('confOverlayDoneBtn');
 
       const fields = ['name', 'email', 'address', 'city', 'postal', 'country'];
       let lastFocused = null;
@@ -685,7 +706,6 @@
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
         stepForm.hidden = false;
-        stepConfirm.hidden = true;
         setTimeout(() => document.getElementById('ckName').focus(), 350);
       }
 
@@ -696,11 +716,27 @@
         if (lastFocused) lastFocused.focus();
       }
 
+      function showOverlay() {
+        confOverlay.classList.add('open');
+        confOverlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function hideOverlay() {
+        confOverlay.classList.remove('open');
+        confOverlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+
       document.getElementById('buyNowBtn').addEventListener('click', openModal);
       closeBtn.addEventListener('click', closeModal);
-      doneBtn.addEventListener('click', closeModal);
+      confOverlayDoneBtn.addEventListener('click', hideOverlay);
+
       window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+        if (e.key === 'Escape') {
+          if (modal.classList.contains('open')) closeModal();
+          if (confOverlay.classList.contains('open')) hideOverlay();
+        }
       });
 
       function clearErrors() {
@@ -749,29 +785,29 @@
           return;
         }
 
-        // simulate brief processing for a sense of occasion
         submitBtn.disabled = true;
         const originalLabel = submitBtn.innerHTML;
         submitBtn.innerHTML = 'Sealing Reservation…';
 
         setTimeout(() => {
           const orderNumber = 'IB-' + Math.floor(100000 + Math.random() * 899999);
-          confirmText.textContent = `Brick No. 6 of 12 has been reserved in your name, ${data.name.split(' ')[0]}.`;
-          receipt.innerHTML = `
-        <div><strong>Order Reference:</strong> ${orderNumber}</div>
-        <div><strong>Name:</strong> ${escapeHtml(data.name)}</div>
-        <div><strong>Email:</strong> ${escapeHtml(data.email)}</div>
-        <div><strong>Ship To:</strong> ${escapeHtml(data.address)}, ${escapeHtml(data.city)} ${escapeHtml(data.postal)}, ${escapeHtml(data.country)}</div>
-        <div><strong>Total:</strong> $2,400 — No payment collected on this demo</div>
-      `;
-          stepForm.hidden = true;
-          stepConfirm.hidden = false;
+          confOverlayText.textContent = `Brick No. 6 of 12 has been reserved in your name, ${data.name.split(' ')[0]}.`;
+          confOverlayReceipt.innerHTML = `
+            <div class="conf-row"><span class="conf-label">Order Reference:</span><span class="conf-val">${orderNumber}</span></div>
+            <div class="conf-row"><span class="conf-label">Name:</span><span class="conf-val">${escapeHtml(data.name)}</span></div>
+            <div class="conf-row"><span class="conf-label">Email:</span><span class="conf-val">${escapeHtml(data.email)}</span></div>
+            <div class="conf-row"><span class="conf-label">Ship To:</span><span class="conf-val">${escapeHtml(data.address)}, ${escapeHtml(data.city)} ${escapeHtml(data.postal)}, ${escapeHtml(data.country)}</span></div>
+            <div class="conf-row"><span class="conf-label">Total:</span><span class="conf-val">$2,400 — No payment collected on this demo</span></div>
+          `;
           submitBtn.disabled = false;
           submitBtn.innerHTML = originalLabel;
+          closeModal();
+          showOverlay();
           playSfx('win');
           launchConfetti();
           showToast("Reservation confirmed — welcome to the House");
           LeaderboardModule.add("Acquisition", "Reserved", 2000 + Math.random());
+          initConfBrick();
         }, 900);
       });
 
@@ -788,6 +824,7 @@
         }
       });
     })();
+
 
     /* ================= SOUND ENGINE (synthesized, no audio files) ================= */
     const SoundFX = (function () {
@@ -1288,6 +1325,150 @@
         overlayStart.classList.remove('hidden');
       };
     })();
+
+    /* ================= CONFIRMATION BRICK CANVAS ================= */
+    let confBrickRaf = null;
+    function initConfBrick() {
+      const canvas = document.getElementById('confBrickCanvas');
+      if (!canvas) return;
+      if (confBrickRaf) cancelAnimationFrame(confBrickRaf);
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+
+      let angle = 0;
+
+      function drawBrick(a) {
+        ctx.clearRect(0, 0, W, H);
+
+        // Isometric 3D brick dimensions
+        const bw = 140, bh = 52, bd = 36; // width, height, depth
+        const cx = W / 2, cy = H / 2 + 10;
+
+        // Perspective factor based on angle
+        const cosA = Math.cos(a);
+        const sinA = Math.sin(a);
+
+        // Project 3D brick corners onto 2D canvas (simple orthographic projection)
+        // Brick centered at origin, rotated around Y axis
+        const hw = bw / 2, hd = bd / 2;
+
+        // 8 corners of brick (x,y,z) - y is up
+        const corners3d = [
+          [-hw, -bh / 2, -hd], [hw, -bh / 2, -hd], [hw, -bh / 2, hd], [-hw, -bh / 2, hd], // top face
+          [-hw, bh / 2, -hd], [hw, bh / 2, -hd], [hw, bh / 2, hd], [-hw, bh / 2, hd], // bottom face
+        ];
+
+        function project(x, y, z) {
+          // Rotate around Y axis
+          const rx = x * cosA + z * sinA;
+          const rz = -x * sinA + z * cosA;
+          // Add slight tilt (X axis rotation)
+          const tilt = 0.3;
+          const ry = y * Math.cos(tilt) - rz * Math.sin(tilt);
+          const rz2 = y * Math.sin(tilt) + rz * Math.cos(tilt);
+          // Simple perspective
+          const scale = 320 / (320 + rz2);
+          return { x: cx + rx * scale, y: cy + ry * scale };
+        }
+
+        const p = corners3d.map(([x, y, z]) => project(x, y, z));
+
+        // Determine which side faces are visible based on angle
+        const showFront = Math.cos(a) > 0;
+        const showRight = Math.sin(a) > 0;
+
+        // Shadow beneath brick
+        const shadowX = cx, shadowY = cy + bh / 2 + 18;
+        const grad = ctx.createRadialGradient(shadowX, shadowY, 0, shadowX, shadowY, 110);
+        grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(shadowX, shadowY, 110, 22, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Helper: draw face
+        function face(pts, fillColor, strokeColor, mortar) {
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x, pts[0].y);
+          for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+          ctx.closePath();
+          ctx.fillStyle = fillColor;
+          ctx.fill();
+          if (strokeColor) {
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+
+        // Bottom face (drawn first if visible - dark)
+        // Face indices: bottom 4-7
+        // Top face: 0-3
+        // Front face: 0,1,5,4   (z = -hd side)
+        // Back face: 2,3,7,6    (z = +hd side)
+        // Right face: 1,2,6,5   (x = +hw side)
+        // Left face: 0,3,7,4    (x = -hw side)
+
+        // Side face (front or back depending on angle)
+        if (showFront) {
+          face([p[3], p[2], p[6], p[7]], '#1a0505', 'rgba(212,175,55,0.3)');
+          // mortar line on side
+          const mx1 = (p[3].x + p[7].x) / 2, my1 = (p[3].y + p[7].y) / 2;
+          const mx2 = (p[2].x + p[6].x) / 2, my2 = (p[2].y + p[6].y) / 2;
+          ctx.beginPath(); ctx.moveTo(mx1, my1); ctx.lineTo(mx2, my2);
+          ctx.strokeStyle = 'rgba(212,175,55,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+        } else {
+          face([p[0], p[1], p[5], p[4]], '#1a0505', 'rgba(212,175,55,0.3)');
+          const mx1 = (p[0].x + p[4].x) / 2, my1 = (p[0].y + p[4].y) / 2;
+          const mx2 = (p[1].x + p[5].x) / 2, my2 = (p[1].y + p[5].y) / 2;
+          ctx.beginPath(); ctx.moveTo(mx1, my1); ctx.lineTo(mx2, my2);
+          ctx.strokeStyle = 'rgba(212,175,55,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+        }
+
+        // Short side face
+        if (showRight) {
+          face([p[1], p[2], p[6], p[5]], '#2a0808', 'rgba(212,175,55,0.25)');
+        } else {
+          face([p[0], p[3], p[7], p[4]], '#2a0808', 'rgba(212,175,55,0.25)');
+        }
+
+        // Top face (red-oxblood)
+        const topGrad = ctx.createLinearGradient(p[0].x, p[0].y, p[2].x, p[2].y);
+        topGrad.addColorStop(0, '#8c1a1a');
+        topGrad.addColorStop(0.5, '#9c2020');
+        topGrad.addColorStop(1, '#7a1313');
+        face([p[0], p[1], p[2], p[3]], topGrad, 'rgba(212,175,55,0.4)');
+
+        // Mortar lines on top
+        for (let t of [0.33, 0.67]) {
+          const lx1 = p[0].x + t * (p[1].x - p[0].x), ly1 = p[0].y + t * (p[1].y - p[0].y);
+          const lx2 = p[3].x + t * (p[2].x - p[3].x), ly2 = p[3].y + t * (p[2].y - p[3].y);
+          ctx.beginPath(); ctx.moveTo(lx1, ly1); ctx.lineTo(lx2, ly2);
+          ctx.strokeStyle = 'rgba(212,175,55,0.25)'; ctx.lineWidth = 0.7; ctx.stroke();
+        }
+        for (let t of [0.5]) {
+          const lx1 = p[0].x + t * (p[3].x - p[0].x), ly1 = p[0].y + t * (p[3].y - p[0].y);
+          const lx2 = p[1].x + t * (p[2].x - p[1].x), ly2 = p[1].y + t * (p[2].y - p[1].y);
+          ctx.beginPath(); ctx.moveTo(lx1, ly1); ctx.lineTo(lx2, ly2);
+          ctx.strokeStyle = 'rgba(212,175,55,0.2)'; ctx.lineWidth = 0.7; ctx.stroke();
+        }
+
+        // Subtle red glow on top
+        const glowGrad = ctx.createRadialGradient(cx, cy - 10, 0, cx, cy - 10, 90);
+        glowGrad.addColorStop(0, 'rgba(180,30,30,0.12)');
+        glowGrad.addColorStop(1, 'rgba(180,30,30,0)');
+        ctx.fillStyle = glowGrad;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      function tick() {
+        angle += 0.012;
+        drawBrick(angle);
+        confBrickRaf = requestAnimationFrame(tick);
+      }
+      tick();
+    }
 
     /* ================= CONFETTI ================= */
     function launchConfetti() {
