@@ -2230,27 +2230,30 @@ footer .fine {
 
 .conf-brick-scene {
   position: relative;
-  width: 320px;
-  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
   z-index: 1;
 }
 
-.conf-brick-scene canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
+.conf-brick-stage {
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: clamp(240px, 34vw, 400px) !important;
+  animation: none !important;
+  opacity: 1 !important;
 }
 
-.conf-brick-glow {
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 180px;
-  height: 30px;
-  background: radial-gradient(ellipse, rgba(122,19,19,0.55) 0%, transparent 70%);
-  filter: blur(8px);
-  border-radius: 50%;
+.conf-brick-stage .brick-pedestal-glow {
+  bottom: 2%;
+}
+
+.conf-brick-stage .brick-reflection {
+  bottom: -6%;
+  opacity: 0.14;
 }
 
 /* ---------- RIGHT PANEL ---------- */
@@ -2371,8 +2374,10 @@ footer .fine {
     flex: 0 0 auto;
   }
   .conf-brick-scene {
-    width: 240px;
-    height: 150px;
+    max-width: 320px;
+  }
+  .conf-brick-stage {
+    height: clamp(180px, 50vw, 260px) !important;
   }
   .conf-right {
     padding: 28px 20px;
